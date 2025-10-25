@@ -21,7 +21,14 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
-  app.use("*", async (req, res, next) => {
+  
+  // SPA fallback for development - don't catch API routes
+  app.get("*", async (req, res, next) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+
     const url = req.originalUrl;
 
     try {
@@ -44,6 +51,11 @@ export async function setupVite(app: Express, server: Server) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }
+  });
+  
+  // 404 handler for unmatched API routes in development
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: "API route not found" });
   });
 }
 
