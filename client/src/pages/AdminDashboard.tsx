@@ -279,7 +279,7 @@ export default function AdminDashboard() {
                     <CardTitle>CRM & Projekt Prozesse</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {onboardingData.crmStages && (
+                    {onboardingData.crmStages && Array.isArray(onboardingData.crmStages) && onboardingData.crmStages.length > 0 && (
                       <div>
                         <strong>CRM Stages:</strong>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -291,14 +291,14 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     )}
-                    {onboardingData.projectTypes && onboardingData.projectTypes.length > 0 && (
+                    {onboardingData.projectTypes && Array.isArray(onboardingData.projectTypes) && onboardingData.projectTypes.length > 0 && (
                       <div>
                         <strong>Projekt Typen:</strong>
                         {onboardingData.projectTypes.map((type: any, i: number) => (
                           <div key={i} className="mt-2">
                             <div className="font-medium">{type.name}</div>
                             <div className="flex flex-wrap gap-2 mt-1">
-                              {type.stages.map((stage: string, j: number) => (
+                              {Array.isArray(type.stages) && type.stages.map((stage: string, j: number) => (
                                 <span key={j} className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
                                   {stage}
                                 </span>
@@ -318,7 +318,7 @@ export default function AdminDashboard() {
                     <CardTitle>Odoo Module & Integrationen</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {onboardingData.modules && onboardingData.modules.length > 0 && (
+                    {onboardingData.modules && Array.isArray(onboardingData.modules) && onboardingData.modules.length > 0 && (
                       <div>
                         <strong>Empfohlene Module:</strong>
                         <ul className="mt-2 list-disc list-inside">
@@ -328,7 +328,7 @@ export default function AdminDashboard() {
                         </ul>
                       </div>
                     )}
-                    {onboardingData.integrations && onboardingData.integrations.length > 0 && (
+                    {onboardingData.integrations && Array.isArray(onboardingData.integrations) && onboardingData.integrations.length > 0 && (
                       <div>
                         <strong>Integrationen:</strong>
                         <ul className="mt-2 list-disc list-inside">

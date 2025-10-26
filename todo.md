@@ -23,3 +23,8 @@
 - [x] Basic onboarding flow with multiple steps
 - [x] API routing fixes for production deployment
 
+
+
+## New Bugs
+- [x] Fix "Cannot read properties of undefined (reading 'map')" error on IONOS deployment
+
