@@ -14,6 +14,11 @@
 - [x] Test static build locally
 - [x] Push static version to GitHub
 
+## Bugs to Fix
+- [x] Fix JavaScript error: "Cannot read properties of undefined (reading 'map')" on deployed version
+- [x] Remove all remaining tRPC references from the codebase
+- [x] Ensure all components work without backend API calls
+
 ## Completed Features
 - [x] Basic onboarding flow with multiple steps
 - [x] API routing fixes for production deployment

@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { trpc } from "@/lib/trpc";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Upload, File, Trash2, Check, Loader2, FileText, Image as ImageIcon } from "lucide-react";
+import { Upload, File, Trash2, Loader2, FileText, Image as ImageIcon } from "lucide-react";
 
 interface DocumentUploadProps {
   sessionId: string;
+}
+
+interface Document {
+  id: string;
+  fileName: string;
+  documentType: string;
+  description?: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedAt: Date;
 }
 
 const DOCUMENT_TYPES = [
@@ -28,25 +37,29 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("other");
   const [description, setDescription] = useState("");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [uploading, setUploading] = useState(false);
 
-  const { data: documents, refetch } = trpc.documents.getBySession.useQuery({ sessionId });
-  const uploadMutation = trpc.documents.upload.useMutation({
-    onSuccess: () => {
-      toast.success("Dokument erfolgreich hochgeladen");
-      refetch();
-      setDescription("");
-    },
-    onError: () => {
-      toast.error("Fehler beim Hochladen");
-    },
-  });
+  useEffect(() => {
+    // Load documents from localStorage
+    const stored = localStorage.getItem(`documents_${sessionId}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setDocuments(parsed.map((d: any) => ({
+          ...d,
+          uploadedAt: new Date(d.uploadedAt)
+        })));
+      } catch (e) {
+        console.error('Failed to load documents:', e);
+      }
+    }
+  }, [sessionId]);
 
-  const deleteMutation = trpc.documents.delete.useMutation({
-    onSuccess: () => {
-      toast.success("Dokument gelöscht");
-      refetch();
-    },
-  });
+  const saveDocuments = (docs: Document[]) => {
+    localStorage.setItem(`documents_${sessionId}`, JSON.stringify(docs));
+    setDocuments(docs);
+  };
 
   const handleFile = useCallback(async (file: File) => {
     if (!file) return;
@@ -57,23 +70,28 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
       return;
     }
 
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target?.result as string;
-      const base64Data = base64.split(',')[1]; // Remove data:image/png;base64, prefix
+    setUploading(true);
 
-      await uploadMutation.mutateAsync({
-        sessionId,
-        documentType: selectedType,
+    // Simulate upload delay
+    setTimeout(() => {
+      const newDoc: Document = {
+        id: `doc_${Date.now()}`,
         fileName: file.name,
-        fileData: base64Data,
-        mimeType: file.type,
+        documentType: selectedType,
         description: description || undefined,
-      });
-    };
-    reader.readAsDataURL(file);
-  }, [sessionId, selectedType, description, uploadMutation]);
+        mimeType: file.type,
+        fileSize: file.size,
+        uploadedAt: new Date()
+      };
+
+      const updatedDocs = [...documents, newDoc];
+      saveDocuments(updatedDocs);
+      
+      toast.success("Dokument erfolgreich hinzugefügt");
+      setDescription("");
+      setUploading(false);
+    }, 500);
+  }, [sessionId, selectedType, description, documents]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -101,6 +119,12 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
       handleFile(e.target.files[0]);
     }
   }, [handleFile]);
+
+  const handleDelete = (id: string) => {
+    const updatedDocs = documents.filter(d => d.id !== id);
+    saveDocuments(updatedDocs);
+    toast.success("Dokument entfernt");
+  };
 
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) return <ImageIcon className="h-5 w-5" />;
@@ -166,16 +190,16 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
               id="file-upload"
               className="hidden"
               onChange={handleChange}
-              disabled={uploadMutation.isPending}
+              disabled={uploading}
             />
             <label
               htmlFor="file-upload"
               className="cursor-pointer flex flex-col items-center"
             >
-              {uploadMutation.isPending ? (
+              {uploading ? (
                 <>
                   <Loader2 className="h-12 w-12 text-accent mb-4 animate-spin" />
-                  <p className="text-sm text-muted-foreground">Wird hochgeladen...</p>
+                  <p className="text-sm text-muted-foreground">Wird hinzugefügt...</p>
                 </>
               ) : (
                 <>
@@ -185,6 +209,9 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     PDF, PNG, JPG, XLSX (max. 10MB)
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Hinweis: Dateien werden nur lokal gespeichert (localStorage)
                   </p>
                 </>
               )}
@@ -226,18 +253,9 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(doc.fileUrl, '_blank')}
-                        >
-                          <File className="h-4 w-4 mr-1" />
-                          Öffnen
-                        </Button>
-                        <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteMutation.mutate({ id: doc.id })}
-                          disabled={deleteMutation.isPending}
+                          onClick={() => handleDelete(doc.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

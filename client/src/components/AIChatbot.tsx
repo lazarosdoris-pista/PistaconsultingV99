@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, X, Minimize2, Maximize2, Loader2 } from "lucide-react";
+import { MessageCircle, Send, X, Minimize2, Maximize2 } from "lucide-react";
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  message: string;
+  createdAt: Date;
+}
 
 interface AIChatbotProps {
   sessionId: string;
@@ -14,19 +20,24 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: chatHistory, refetch } = trpc.chat.getHistory.useQuery(
-    { sessionId },
-    { enabled: isOpen }
-  );
-
-  const sendMessageMutation = trpc.chat.sendMessage.useMutation({
-    onSuccess: () => {
-      refetch();
-      setMessage("");
-    },
-  });
+  useEffect(() => {
+    // Load chat history from localStorage
+    const stored = localStorage.getItem(`chat_${sessionId}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setChatHistory(parsed.map((m: any) => ({
+          ...m,
+          createdAt: new Date(m.createdAt)
+        })));
+      } catch (e) {
+        console.error('Failed to load chat history:', e);
+      }
+    }
+  }, [sessionId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,12 +50,60 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
   }, [chatHistory, isOpen, isMinimized]);
 
   const handleSend = () => {
-    if (!message.trim() || sendMessageMutation.isPending) return;
+    if (!message.trim()) return;
     
-    sendMessageMutation.mutate({
-      sessionId,
+    const userMessage: Message = {
+      id: `user_${Date.now()}`,
+      role: 'user',
       message: message.trim(),
-    });
+      createdAt: new Date()
+    };
+
+    const newHistory = [...chatHistory, userMessage];
+    setChatHistory(newHistory);
+
+    // Auto-response (simple static version)
+    setTimeout(() => {
+      const response: Message = {
+        id: `assistant_${Date.now()}`,
+        role: 'assistant',
+        message: getAutoResponse(message.trim()),
+        createdAt: new Date()
+      };
+      const updatedHistory = [...newHistory, response];
+      setChatHistory(updatedHistory);
+      
+      // Save to localStorage
+      localStorage.setItem(`chat_${sessionId}`, JSON.stringify(updatedHistory));
+    }, 500);
+
+    setMessage("");
+  };
+
+  const getAutoResponse = (userMessage: string): string => {
+    const lower = userMessage.toLowerCase();
+    
+    if (lower.includes('prozessmappe') || lower.includes('prozess')) {
+      return 'Eine Prozessmappe dokumentiert alle wichtigen Geschäftsprozesse Ihres Unternehmens. Sie hilft uns, Ihre Arbeitsabläufe zu verstehen und optimal in Odoo abzubilden.';
+    }
+    
+    if (lower.includes('dokument') || lower.includes('upload')) {
+      return 'Sie sollten relevante Dokumente hochladen wie: Organigramme, Prozessbeschreibungen, Preislisten, Produktkataloge oder bestehende Templates. Diese helfen uns, Ihre Anforderungen besser zu verstehen.';
+    }
+    
+    if (lower.includes('warum') || lower.includes('information')) {
+      return 'Diese Informationen helfen uns, eine maßgeschneiderte Odoo-Lösung für Ihr Unternehmen zu entwickeln. Je mehr wir über Ihre Prozesse wissen, desto besser können wir das System an Ihre Bedürfnisse anpassen.';
+    }
+    
+    if (lower.includes('odoo')) {
+      return 'Odoo ist eine umfassende Business-Software-Suite mit Modulen für CRM, Projekt-Management, Zeiterfassung, Buchhaltung und vieles mehr. Wir helfen Ihnen, die passenden Module auszuwählen und zu implementieren.';
+    }
+    
+    if (lower.includes('dauer') || lower.includes('zeit')) {
+      return 'Die Implementierungsdauer hängt vom Umfang ab. Typischerweise dauert ein Odoo-Projekt zwischen 2-6 Monaten. Nach diesem Onboarding können wir Ihnen einen genaueren Zeitplan erstellen.';
+    }
+    
+    return 'Danke für Ihre Frage! Für detaillierte Antworten kontaktieren Sie bitte direkt PISTA Consulting. Ich bin hier, um Sie durch den Onboarding-Prozess zu führen.';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -98,7 +157,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
       {!isMinimized && (
         <>
           <CardContent className="p-4 h-[calc(100%-140px)] overflow-y-auto">
-            {!chatHistory || chatHistory.length === 0 ? (
+            {chatHistory.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6">
                 <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="font-semibold mb-2">Hallo, ich bin Pisti! 👋</h3>
@@ -128,9 +187,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {[...chatHistory].sort((a, b) => 
-                  new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
-                ).map((msg) => (
+                {chatHistory.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -149,7 +206,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
                       )}
                       <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                       <p className="text-xs opacity-70 mt-1">
-                        {new Date(msg.createdAt!).toLocaleTimeString('de-DE', {
+                        {msg.createdAt.toLocaleTimeString('de-DE', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
@@ -157,13 +214,6 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
                     </div>
                   </div>
                 ))}
-                {sendMessageMutation.isPending && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg p-3">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  </div>
-                )}
                 <div ref={messagesEndRef} />
               </div>
             )}
@@ -176,19 +226,14 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Stellen Sie eine Frage..."
-                disabled={sendMessageMutation.isPending}
               />
               <Button
                 onClick={handleSend}
-                disabled={!message.trim() || sendMessageMutation.isPending}
+                disabled={!message.trim()}
                 size="icon"
                 className="bg-accent hover:bg-accent/90"
               >
-                {sendMessageMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
