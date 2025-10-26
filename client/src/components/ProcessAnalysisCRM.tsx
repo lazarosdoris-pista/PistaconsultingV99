@@ -81,12 +81,16 @@ export default function ProcessAnalysisCRM({
   const [showingProjectTypes, setShowingProjectTypes] = useState(false);
   const [currentProjectTypeIndex, setCurrentProjectTypeIndex] = useState(0);
 
-  const currentProcess = (processes || [])[currentIndex];
-  const currentAnalysis = analyses[currentIndex];
+  const currentProcess = (processes || [])[currentIndex] || {
+    id: "unknown",
+    name: "Unbekannte Phase",
+    description: "Keine Beschreibung verfügbar",
+    benefit: "",
+    icon: "❓"
+  };
+  const currentAnalysis = analyses[currentIndex] || {};
   const totalSteps = (processes || []).length + (projectTypes || []).length;
-  const currentStep = showingProjectTypes 
-    ? (processes || []).length + currentProjectTypeIndex + 1
-    : currentIndex + 1;
+  const currentStep = showingProjectTypes ? (processes || []).length + currentProjectTypeIndex + 1 : currentIndex + 1;
 
   const updateAnalysis = (field: keyof ProcessAnalysisData, value: string) => {
     const newAnalyses = [...analyses];
@@ -152,7 +156,15 @@ export default function ProcessAnalysisCRM({
 
   if (showingProjectTypes) {
     const typeId = projectTypes[currentProjectTypeIndex];
-    const typeConfig = PROJECT_TYPE_QUESTIONS[typeId as keyof typeof PROJECT_TYPE_QUESTIONS];
+    const typeConfig = PROJECT_TYPE_QUESTIONS[typeId as keyof typeof PROJECT_TYPE_QUESTIONS] || {
+      name: "Projekt-Typ",
+      icon: "📋",
+      questions: [
+        { id: "typical_duration", label: "Typische Projektdauer", placeholder: "z.B. 1-3 Tage" },
+        { id: "team_size", label: "Anzahl Mitarbeiter pro Projekt", placeholder: "z.B. 2 Mitarbeiter" },
+        { id: "challenges", label: "Häufige Herausforderungen", placeholder: "Beschreiben Sie typische Herausforderungen" }
+      ]
+    };
     const currentData = projectTypeData[currentProjectTypeIndex];
 
     return (

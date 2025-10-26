@@ -37,3 +37,8 @@
 - [ ] Test FormSubmit email delivery (requires manual testing)
 - [x] Fix any errors found during testing
 
+
+
+## Critical Bugs
+- [x] Fix "Cannot read properties of undefined (reading 'icon')" error on deployed version
+
