@@ -50,12 +50,12 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
   }, [chatHistory, isOpen, isMinimized]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message || !message.trim()) return;
     
     const userMessage: Message = {
       id: `user_${Date.now()}`,
       role: 'user',
-      message: message.trim(),
+      message: message ? message.trim() : "",
       createdAt: new Date()
     };
 
@@ -67,7 +67,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
       const response: Message = {
         id: `assistant_${Date.now()}`,
         role: 'assistant',
-        message: getAutoResponse(message.trim()),
+        message: getAutoResponse(message ? message.trim() : ""),
         createdAt: new Date()
       };
       const updatedHistory = [...newHistory, response];
@@ -229,7 +229,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
               />
               <Button
                 onClick={handleSend}
-                disabled={!message.trim()}
+                disabled={!message || !message.trim()}
                 size="icon"
                 className="bg-accent hover:bg-accent/90"
               >

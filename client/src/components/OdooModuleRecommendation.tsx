@@ -164,7 +164,7 @@ export default function OdooModuleRecommendation({
   const getRecommendedModules = () => {
     return ODOO_MODULES.map(module => {
       const isRequired = module.requiredFor.some(req => 
-        selectedCRMStages.includes(req) || selectedProjectTypes.includes(req)
+        (selectedCRMStages || []).includes(req) || (selectedProjectTypes || []).includes(req)
       );
       
       return {

@@ -69,7 +69,7 @@ export default function ProcessAnalysis({ processes, onComplete, onBack }: Proce
     }
   };
 
-  const isCurrentStepValid = currentAnalysis.currentState.trim().length > 0;
+  const isCurrentStepValid = currentAnalysis && currentAnalysis.currentState && currentAnalysis.currentState.trim().length > 0;
 
   return (
     <div className="space-y-6">

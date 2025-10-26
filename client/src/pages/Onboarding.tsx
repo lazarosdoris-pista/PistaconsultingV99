@@ -222,7 +222,7 @@ export default function Onboarding() {
   };
 
   const handleStartOnboarding = () => {
-    if (!clientName.trim()) {
+    if (!clientName || !clientName.trim()) {
       toast.error("Bitte geben Sie Ihren Namen ein");
       return;
     }
@@ -233,7 +233,7 @@ export default function Onboarding() {
   };
 
   const handleSaveCompanyInfo = () => {
-    if (!companyName.trim()) {
+    if (!companyName || !companyName.trim()) {
       toast.error("Bitte geben Sie den Firmennamen ein");
       return;
     }
@@ -281,7 +281,7 @@ export default function Onboarding() {
       return;
     }
     
-    const hasEmptyTitles = goals.some(g => !g.title.trim());
+    const hasEmptyTitles = goals.some(g => !g.title || !g.title.trim());
     if (hasEmptyTitles) {
       toast.error("Bitte geben Sie für alle Ziele einen Titel ein");
       return;
@@ -311,7 +311,7 @@ export default function Onboarding() {
       return;
     }
     
-    const hasEmptyNames = values.some(v => !v.valueName.trim());
+    const hasEmptyNames = values.some(v => !v.valueName || !v.valueName.trim());
     if (hasEmptyNames) {
       toast.error("Bitte geben Sie für alle Werte einen Namen ein");
       return;

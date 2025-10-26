@@ -42,3 +42,10 @@
 ## Critical Bugs
 - [x] Fix "Cannot read properties of undefined (reading 'icon')" error on deployed version
 
+
+
+## New Critical Bugs
+- [x] Fix "Cannot read properties of undefined (reading 'trim')" error
+- [x] Systematically fix ALL "Cannot read properties of undefined" errors in onboarding flow
+- [x] Ensure every single step of onboarding works without crashes
+

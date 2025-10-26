@@ -149,7 +149,7 @@ export default function ProcessAnalysisCRM({
     if (showingProjectTypes) {
       return true; // Project type questions are optional
     }
-    return currentAnalysis.currentState.trim().length > 0;
+    return currentAnalysis && currentAnalysis.currentState && currentAnalysis.currentState.trim().length > 0;
   };
 
   const progress = (currentStep / totalSteps) * 100;

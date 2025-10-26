@@ -123,7 +123,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
   const [showAddProject, setShowAddProject] = useState(false);
 
   const addCustomCRMPhase = () => {
-    if (newCRMName.trim()) {
+    if (newCRMName && newCRMName.trim()) {
       const newPhase: ProcessStep = {
         id: `custom-crm-${Date.now()}`,
         name: newCRMName,
@@ -147,7 +147,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
   };
 
   const addCustomProjectType = () => {
-    if (newProjectName.trim()) {
+    if (newProjectName && newProjectName.trim()) {
       const newType: CustomProjectType = {
         id: `custom-project-${Date.now()}`,
         name: newProjectName,
