@@ -44,10 +44,10 @@ export default function ProcessAnalysis({ processes, onComplete, onBack }: Proce
 
   const currentProcess = processes[currentIndex];
   const currentAnalysis = analyses[currentIndex];
-  const progress = ((currentIndex + 1) / processes.length) * 100;
+  const progress = ((currentIndex + 1) / ((processes || []).length || 1)) * 100;
 
   const updateCurrentAnalysis = (field: keyof ProcessAnalysisData, value: string) => {
-    const newAnalyses = [...analyses];
+    const newAnalyses = [...(analyses || [])];
     newAnalyses[currentIndex] = {
       ...newAnalyses[currentIndex],
       [field]: value
@@ -56,7 +56,7 @@ export default function ProcessAnalysis({ processes, onComplete, onBack }: Proce
   };
 
   const handleNext = () => {
-    if (currentIndex < processes.length - 1) {
+    if (currentIndex < ((processes || []).length - 1)) {
       setCurrentIndex(currentIndex + 1);
     } else {
       onComplete(analyses);
@@ -81,7 +81,7 @@ export default function ProcessAnalysis({ processes, onComplete, onBack }: Proce
               <div>
                 <h3 className="font-bold text-lg">Prozessanalyse</h3>
                 <p className="text-sm text-muted-foreground">
-                  Schritt {currentIndex + 1} von {processes.length}
+                  Schritt {currentIndex + 1} von {(processes || []).length}
                 </p>
               </div>
               <Badge variant="outline" className="text-lg px-4 py-2">
@@ -229,7 +229,7 @@ export default function ProcessAnalysis({ processes, onComplete, onBack }: Proce
               disabled={!isCurrentStepValid}
               className="bg-accent hover:bg-accent/90"
             >
-              {currentIndex === processes.length - 1 ? (
+              {currentIndex === ((processes || []).length - 1) ? (
                 <>
                   Analyse abschließen
                   <CheckCircle2 className="ml-2 h-4 w-4" />

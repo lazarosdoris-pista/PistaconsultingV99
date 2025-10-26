@@ -93,7 +93,7 @@ export default function ProcessAnalysisCRM({
   const currentStep = showingProjectTypes ? (processes || []).length + currentProjectTypeIndex + 1 : currentIndex + 1;
 
   const updateAnalysis = (field: keyof ProcessAnalysisData, value: string) => {
-    const newAnalyses = [...analyses];
+    const newAnalyses = [...(analyses || [])];
     newAnalyses[currentIndex] = {
       ...newAnalyses[currentIndex],
       [field]: value
@@ -102,7 +102,7 @@ export default function ProcessAnalysisCRM({
   };
 
   const updateProjectTypeData = (questionId: string, value: string) => {
-    const newData = [...projectTypeData];
+    const newData = [...(projectTypeData || [])];
     newData[currentProjectTypeIndex] = {
       ...newData[currentProjectTypeIndex],
       data: {
@@ -124,7 +124,7 @@ export default function ProcessAnalysisCRM({
         onComplete(analyses, projectTypeData);
       }
     } else {
-      if (currentProjectTypeIndex < projectTypes.length - 1) {
+      if (currentProjectTypeIndex < ((projectTypes || []).length - 1)) {
         setCurrentProjectTypeIndex(currentProjectTypeIndex + 1);
       } else {
         onComplete(analyses, projectTypeData);
@@ -138,7 +138,7 @@ export default function ProcessAnalysisCRM({
         setCurrentProjectTypeIndex(currentProjectTypeIndex - 1);
       } else {
         setShowingProjectTypes(false);
-        setCurrentIndex(processes.length - 1);
+        setCurrentIndex((processes || []).length - 1);
       }
     } else if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
@@ -218,7 +218,7 @@ export default function ProcessAnalysisCRM({
             Zurück
           </Button>
           <Button onClick={handleNext} className="bg-primary hover:bg-primary/90">
-            {currentProjectTypeIndex === projectTypes.length - 1 ? (
+            {currentProjectTypeIndex === ((projectTypes || []).length - 1) ? (
               <>
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 Analyse abschließen
@@ -345,7 +345,7 @@ export default function ProcessAnalysisCRM({
           disabled={!canProceed()}
           className="bg-primary hover:bg-primary/90"
         >
-          {currentIndex === processes.length - 1 && projectTypes.length === 0 ? (
+          {currentIndex === ((processes || []).length - 1) && (projectTypes || []).length === 0 ? (
             <>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Analyse abschließen

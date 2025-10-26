@@ -194,7 +194,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
     onConfirm(selectedProcesses, selectedProjectTypes);
   };
 
-  const allCRMPhases = [...CRM_STAGES, ...customCRMPhases];
+  const allCRMPhases = [...(CRM_STAGES || []), ...(customCRMPhases || [])];
 
   return (
     <div className="space-y-6">
@@ -334,7 +334,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            {[...PROJECT_TYPES, ...customProjectTypes].map((type) => (
+            {[...(PROJECT_TYPES || []), ...(customProjectTypes || [])].map((type) => (
               <Card
                 key={type.id}
                 className={`cursor-pointer transition-all border-2 ${
@@ -453,7 +453,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
       <div className="flex justify-end">
         <Button
           onClick={handleConfirm}
-          disabled={selectedCRM.length === 0 && selectedProjectTypes.length === 0}
+          disabled={(selectedCRM || []).length === 0 && (selectedProjectTypes || []).length === 0}
           className="bg-primary hover:bg-primary/90"
           size="lg"
         >
