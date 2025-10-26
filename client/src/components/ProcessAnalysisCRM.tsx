@@ -62,7 +62,7 @@ export default function ProcessAnalysisCRM({
 }: ProcessAnalysisCRMProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [analyses, setAnalyses] = useState<ProcessAnalysisData[]>(
-    processes.map(p => ({
+    (processes || []).map(p => ({
       processId: p.id,
       currentState: "",
       painPoints: "",
@@ -72,7 +72,7 @@ export default function ProcessAnalysisCRM({
   );
 
   const [projectTypeData, setProjectTypeData] = useState<any[]>(
-    projectTypes.map(typeId => ({
+    (projectTypes || []).map(typeId => ({
       typeId,
       data: {}
     }))
@@ -81,11 +81,11 @@ export default function ProcessAnalysisCRM({
   const [showingProjectTypes, setShowingProjectTypes] = useState(false);
   const [currentProjectTypeIndex, setCurrentProjectTypeIndex] = useState(0);
 
-  const currentProcess = processes[currentIndex];
+  const currentProcess = (processes || [])[currentIndex];
   const currentAnalysis = analyses[currentIndex];
-  const totalSteps = processes.length + projectTypes.length;
+  const totalSteps = (processes || []).length + (projectTypes || []).length;
   const currentStep = showingProjectTypes 
-    ? processes.length + currentProjectTypeIndex + 1
+    ? (processes || []).length + currentProjectTypeIndex + 1
     : currentIndex + 1;
 
   const updateAnalysis = (field: keyof ProcessAnalysisData, value: string) => {
@@ -111,9 +111,9 @@ export default function ProcessAnalysisCRM({
 
   const handleNext = () => {
     if (!showingProjectTypes) {
-      if (currentIndex < processes.length - 1) {
+      if (currentIndex < (processes || []).length - 1) {
         setCurrentIndex(currentIndex + 1);
-      } else if (projectTypes.length > 0) {
+      } else if ((projectTypes || []).length > 0) {
         setShowingProjectTypes(true);
         setCurrentProjectTypeIndex(0);
       } else {
