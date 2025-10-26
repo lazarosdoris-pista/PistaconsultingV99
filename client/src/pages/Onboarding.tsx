@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Check } from "lucide-react";
+import { Loader2, Plus, Trash2, Check, ArrowLeft } from "lucide-react";
 import ProcessDiagramCRM from "@/components/ProcessDiagramCRM";
 import ProcessAnalysisCRM from "@/components/ProcessAnalysisCRM";
 import OdooModuleRecommendation from "@/components/OdooModuleRecommendation";
@@ -21,6 +20,7 @@ import DocumentUpload from "@/components/DocumentUpload";
 import AIChatbot from "@/components/AIChatbot";
 
 const TOTAL_STEPS = 11;
+const STORAGE_KEY = "onboarding_data";
 
 interface ProcessStep {
   id: string;
@@ -38,15 +38,56 @@ interface ProcessAnalysisData {
   priority: "low" | "medium" | "high";
 }
 
+interface OnboardingData {
+  currentStep: number;
+  clientName: string;
+  clientEmail: string;
+  companyName: string;
+  industry: string;
+  foundedYear: string;
+  numberOfEmployees: string;
+  companyLocation: string;
+  website: string;
+  description: string;
+  selectedProcesses: ProcessStep[];
+  selectedProjectTypes: string[];
+  processAnalyses: ProcessAnalysisData[];
+  projectTypeData: any[];
+  goals: Array<{
+    goalType: "short_term" | "long_term" | "vision";
+    title: string;
+    description: string;
+    priority: "low" | "medium" | "high";
+  }>;
+  values: Array<{
+    valueName: string;
+    description: string;
+    examples: string;
+    importance: number;
+  }>;
+  automations: any[];
+  roles: any[];
+  integrations: any[];
+  goLivePlan: any;
+  additionalNotes: string;
+  step1Comments: string;
+  step2Comments: string;
+  step3Comments: string;
+  step6Comments: string;
+  step7Comments: string;
+  step8Comments: string;
+  step9Comments: string;
+  step10Comments: string;
+}
+
 export default function Onboarding() {
   const [, navigate] = useLocation();
-  const [sessionId, setSessionId] = useState<string>("");
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Step 1: Client Information
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-
   
   // Step 2: Company Information
   const [companyName, setCompanyName] = useState("Waldhauser Sanitär & Heizung");
@@ -66,7 +107,6 @@ export default function Onboarding() {
   
   // Step 4: Goals and Wishes
   const [goals, setGoals] = useState<Array<{
-    id?: string;
     goalType: "short_term" | "long_term" | "vision";
     title: string;
     description: string;
@@ -75,15 +115,12 @@ export default function Onboarding() {
   
   // Step 5: Company Values
   const [values, setValues] = useState<Array<{
-    id?: string;
     valueName: string;
     description: string;
     examples: string;
     importance: number;
   }>>([]);
 
-  // Step 6: Odoo Module Recommendations (auto-generated, no state needed)
-  
   // Step 7: Workflow Automation
   const [automations, setAutomations] = useState<any[]>([]);
   
@@ -107,94 +144,118 @@ export default function Onboarding() {
   const [step9Comments, setStep9Comments] = useState("");
   const [step10Comments, setStep10Comments] = useState("");
 
-  const createSessionMutation = trpc.onboarding.createSession.useMutation();
-  const updateSessionMutation = trpc.onboarding.updateSession.useMutation();
-  const upsertCompanyInfoMutation = trpc.companyInfo.upsert.useMutation();
-  const createProcessMutation = trpc.processes.create.useMutation();
-  const createGoalMutation = trpc.goals.create.useMutation();
-  const createValueMutation = trpc.values.create.useMutation();
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const data: OnboardingData = JSON.parse(savedData);
+        setCurrentStep(data.currentStep);
+        setClientName(data.clientName);
+        setClientEmail(data.clientEmail);
+        setCompanyName(data.companyName);
+        setIndustry(data.industry);
+        setFoundedYear(data.foundedYear);
+        setNumberOfEmployees(data.numberOfEmployees);
+        setCompanyLocation(data.companyLocation);
+        setWebsite(data.website);
+        setDescription(data.description);
+        setSelectedProcesses(data.selectedProcesses);
+        setSelectedProjectTypes(data.selectedProjectTypes);
+        setProcessAnalyses(data.processAnalyses);
+        setProjectTypeData(data.projectTypeData);
+        setGoals(data.goals);
+        setValues(data.values);
+        setAutomations(data.automations);
+        setRoles(data.roles);
+        setIntegrations(data.integrations);
+        setGoLivePlan(data.goLivePlan);
+        setAdditionalNotes(data.additionalNotes);
+        setStep1Comments(data.step1Comments);
+        setStep2Comments(data.step2Comments);
+        setStep3Comments(data.step3Comments);
+        setStep6Comments(data.step6Comments);
+        setStep7Comments(data.step7Comments);
+        setStep8Comments(data.step8Comments);
+        setStep9Comments(data.step9Comments);
+        setStep10Comments(data.step10Comments);
+      } catch (error) {
+        console.error("Error loading saved data:", error);
+      }
+    }
+  }, []);
 
-  const handleStartOnboarding = async () => {
+  // Save data to localStorage whenever it changes
+  const saveToLocalStorage = () => {
+    const data: OnboardingData = {
+      currentStep,
+      clientName,
+      clientEmail,
+      companyName,
+      industry,
+      foundedYear,
+      numberOfEmployees,
+      companyLocation,
+      website,
+      description,
+      selectedProcesses,
+      selectedProjectTypes,
+      processAnalyses,
+      projectTypeData,
+      goals,
+      values,
+      automations,
+      roles,
+      integrations,
+      goLivePlan,
+      additionalNotes,
+      step1Comments,
+      step2Comments,
+      step3Comments,
+      step6Comments,
+      step7Comments,
+      step8Comments,
+      step9Comments,
+      step10Comments,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  };
+
+  const handleStartOnboarding = () => {
     if (!clientName.trim()) {
       toast.error("Bitte geben Sie Ihren Namen ein");
       return;
     }
     
-    try {
-      const result = await createSessionMutation.mutateAsync({
-        clientName,
-        clientEmail: clientEmail || undefined,
-
-      });
-      
-      setSessionId(result.sessionId);
-      setCurrentStep(2);
-      toast.success("Willkommen! Lassen Sie uns beginnen.");
-    } catch (error) {
-      toast.error("Fehler beim Starten der Sitzung");
-    }
+    setCurrentStep(2);
+    saveToLocalStorage();
+    toast.success("Willkommen! Lassen Sie uns beginnen.");
   };
 
-  const handleSaveCompanyInfo = async () => {
+  const handleSaveCompanyInfo = () => {
     if (!companyName.trim()) {
       toast.error("Bitte geben Sie den Firmennamen ein");
       return;
     }
     
-    try {
-      await upsertCompanyInfoMutation.mutateAsync({
-        sessionId,
-        companyName,
-        industry: industry || undefined,
-        foundedYear: foundedYear ? parseInt(foundedYear) : undefined,
-        numberOfEmployees: numberOfEmployees ? parseInt(numberOfEmployees) : undefined,
-        location: companyLocation || undefined,
-        website: website || undefined,
-        description: description || undefined,
-      });
-      
-      await updateSessionMutation.mutateAsync({ sessionId, currentStep: 3 });
-      setCurrentStep(3);
-      toast.success("Firmeninformationen gespeichert");
-    } catch (error) {
-      toast.error("Fehler beim Speichern");
-    }
+    setCurrentStep(3);
+    saveToLocalStorage();
+    toast.success("Firmeninformationen gespeichert");
   };
 
   const handleProcessesConfirmed = (processes: ProcessStep[], projectTypes: string[]) => {
     setSelectedProcesses(processes);
     setSelectedProjectTypes(projectTypes);
     setShowProcessAnalysis(true);
+    saveToLocalStorage();
   };
 
-  const handleProcessAnalysisComplete = async (analyses: ProcessAnalysisData[], projTypeData: any[]) => {
+  const handleProcessAnalysisComplete = (analyses: ProcessAnalysisData[], projTypeData: any[]) => {
     setProcessAnalyses(analyses);
     setProjectTypeData(projTypeData);
-    
-    try {
-      // Save each process analysis to database
-      for (let i = 0; i < selectedProcesses.length; i++) {
-        const process = selectedProcesses[i];
-        const analysis = analyses[i];
-        
-        await createProcessMutation.mutateAsync({
-          sessionId,
-          processName: process.name,
-          category: "Hauptprozess",
-          description: process.description,
-          currentState: analysis.currentState,
-          painPoints: analysis.painPoints,
-          desiredState: analysis.desiredState,
-          priority: analysis.priority,
-        });
-      }
-      
-      await updateSessionMutation.mutateAsync({ sessionId, currentStep: 4 });
-      setCurrentStep(4);
-      toast.success("Prozessanalyse gespeichert");
-    } catch (error) {
-      toast.error("Fehler beim Speichern der Prozesse");
-    }
+    setCurrentStep(4);
+    saveToLocalStorage();
+    toast.success("Prozessanalyse gespeichert");
   };
 
   const handleBackToProcessSelection = () => {
@@ -214,7 +275,7 @@ export default function Onboarding() {
     setGoals(goals.filter((_, i) => i !== index));
   };
 
-  const handleSaveGoals = async () => {
+  const handleSaveGoals = () => {
     if (goals.length === 0) {
       toast.error("Bitte fügen Sie mindestens ein Ziel hinzu");
       return;
@@ -226,20 +287,9 @@ export default function Onboarding() {
       return;
     }
     
-    try {
-      for (const goal of goals) {
-        await createGoalMutation.mutateAsync({
-          sessionId,
-          ...goal,
-        });
-      }
-      
-      await updateSessionMutation.mutateAsync({ sessionId, currentStep: 5 });
-      setCurrentStep(5);
-      toast.success("Ziele gespeichert");
-    } catch (error) {
-      toast.error("Fehler beim Speichern der Ziele");
-    }
+    setCurrentStep(5);
+    saveToLocalStorage();
+    toast.success("Ziele gespeichert");
   };
 
   const handleAddValue = () => {
@@ -255,7 +305,7 @@ export default function Onboarding() {
     setValues(values.filter((_, i) => i !== index));
   };
 
-  const handleComplete = async () => {
+  const handleSaveValues = () => {
     if (values.length === 0) {
       toast.error("Bitte fügen Sie mindestens einen Wert hinzu");
       return;
@@ -267,24 +317,77 @@ export default function Onboarding() {
       return;
     }
     
+    setCurrentStep(6);
+    saveToLocalStorage();
+    toast.success("Unternehmenswerte gespeichert");
+  };
+
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    
     try {
-      for (const value of values) {
-        await createValueMutation.mutateAsync({
-          sessionId,
-          ...value,
-        });
-      }
+      // Prepare all data for email submission
+      const formData = new FormData();
       
-      await updateSessionMutation.mutateAsync({ 
-        sessionId, 
-        currentStep: 5,
-        completedAt: new Date()
+      // Add all onboarding data to form
+      formData.append("_subject", `Neues Onboarding: ${companyName}`);
+      formData.append("Client Name", clientName);
+      formData.append("Client Email", clientEmail);
+      formData.append("Company Name", companyName);
+      formData.append("Industry", industry);
+      formData.append("Founded Year", foundedYear);
+      formData.append("Number of Employees", numberOfEmployees);
+      formData.append("Location", companyLocation);
+      formData.append("Website", website);
+      formData.append("Description", description);
+      
+      // Add processes
+      formData.append("Selected Processes", JSON.stringify(selectedProcesses, null, 2));
+      formData.append("Process Analyses", JSON.stringify(processAnalyses, null, 2));
+      formData.append("Project Types", JSON.stringify(selectedProjectTypes, null, 2));
+      
+      // Add goals
+      formData.append("Goals", JSON.stringify(goals, null, 2));
+      
+      // Add values
+      formData.append("Company Values", JSON.stringify(values, null, 2));
+      
+      // Add automations, roles, integrations, go-live plan
+      formData.append("Automations", JSON.stringify(automations, null, 2));
+      formData.append("Roles & Permissions", JSON.stringify(roles, null, 2));
+      formData.append("Integrations", JSON.stringify(integrations, null, 2));
+      formData.append("Go-Live Plan", JSON.stringify(goLivePlan, null, 2));
+      
+      // Add comments
+      formData.append("Additional Notes", additionalNotes);
+      formData.append("Step 1 Comments", step1Comments);
+      formData.append("Step 2 Comments", step2Comments);
+      formData.append("Step 3 Comments", step3Comments);
+      formData.append("Step 6 Comments", step6Comments);
+      formData.append("Step 7 Comments", step7Comments);
+      formData.append("Step 8 Comments", step8Comments);
+      formData.append("Step 9 Comments", step9Comments);
+      formData.append("Step 10 Comments", step10Comments);
+      
+      // Submit to FormSubmit
+      const response = await fetch("https://formsubmit.co/fl@leibinger-am.de", {
+        method: "POST",
+        body: formData,
       });
       
-      toast.success("Onboarding erfolgreich abgeschlossen!");
-      setTimeout(() => navigate("/success"), 1500);
+      if (response.ok) {
+        // Clear localStorage after successful submission
+        localStorage.removeItem(STORAGE_KEY);
+        toast.success("Onboarding erfolgreich abgeschlossen!");
+        setTimeout(() => navigate("/success"), 1500);
+      } else {
+        throw new Error("Submission failed");
+      }
     } catch (error) {
-      toast.error("Fehler beim Abschließen");
+      console.error("Error submitting form:", error);
+      toast.error("Fehler beim Absenden. Bitte versuchen Sie es erneut.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -303,9 +406,12 @@ export default function Onboarding() {
           </div>
           
           <Progress value={progress} className="h-2" />
-          <p className="text-sm text-muted-foreground mt-2">Schritt {currentStep} von {TOTAL_STEPS}</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Schritt {currentStep} von {TOTAL_STEPS}
+          </p>
         </div>
 
+        {/* Step 1: Client Information */}
         {currentStep === 1 && (
           <Card>
             <CardHeader>
@@ -315,7 +421,7 @@ export default function Onboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="clientName">Name *</Label>
                 <Input
                   id="clientName"
@@ -324,8 +430,7 @@ export default function Onboarding() {
                   placeholder="Ihr vollständiger Name"
                 />
               </div>
-              
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="clientEmail">E-Mail</Label>
                 <Input
                   id="clientEmail"
@@ -335,19 +440,23 @@ export default function Onboarding() {
                   placeholder="ihre.email@beispiel.de"
                 />
               </div>
-              
-              <Button 
-                onClick={handleStartOnboarding} 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={createSessionMutation.isPending}
-              >
-                {createSessionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <div>
+                <Label htmlFor="step1Comments">Zusätzliche Anmerkungen (optional)</Label>
+                <Textarea
+                  id="step1Comments"
+                  value={step1Comments}
+                  onChange={(e) => setStep1Comments(e.target.value)}
+                  placeholder="Haben Sie weitere Informationen, die Sie hinzufügen möchten?"
+                />
+              </div>
+              <Button onClick={handleStartOnboarding} className="w-full">
                 Weiter
               </Button>
             </CardContent>
           </Card>
         )}
 
+        {/* Step 2: Company Information */}
         {currentStep === 2 && (
           <Card>
             <CardHeader>
@@ -357,72 +466,61 @@ export default function Onboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Firmenname *</Label>
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Waldhauser Sanitär & Heizung"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="industry">Branche</Label>
-                  <Input
-                    id="industry"
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="z.B. Handwerk, Sanitär"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="foundedYear">Gründungsjahr</Label>
-                  <Input
-                    id="foundedYear"
-                    type="number"
-                    value={foundedYear}
-                    onChange={(e) => setFoundedYear(e.target.value)}
-                    placeholder="z.B. 1990"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="numberOfEmployees">Anzahl Mitarbeiter</Label>
-                  <Input
-                    id="numberOfEmployees"
-                    type="number"
-                    value={numberOfEmployees}
-                    onChange={(e) => setNumberOfEmployees(e.target.value)}
-                    placeholder="z.B. 15"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="location">Standort</Label>
-                  <Input
-                    id="location"
-                    value={companyLocation}
-                    onChange={(e) => setCompanyLocation(e.target.value)}
-                    placeholder="z.B. Grünwald"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    type="url"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://www.beispiel.de"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="companyName">Firmenname *</Label>
+                <Input
+                  id="companyName"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Waldhauser Sanitär & Heizung"
+                />
               </div>
-              
-              <div className="space-y-2">
+              <div>
+                <Label htmlFor="industry">Branche</Label>
+                <Input
+                  id="industry"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  placeholder="z.B. Handwerk, Sanitär"
+                />
+              </div>
+              <div>
+                <Label htmlFor="foundedYear">Gründungsjahr</Label>
+                <Input
+                  id="foundedYear"
+                  value={foundedYear}
+                  onChange={(e) => setFoundedYear(e.target.value)}
+                  placeholder="z.B. 1990"
+                />
+              </div>
+              <div>
+                <Label htmlFor="numberOfEmployees">Anzahl Mitarbeiter</Label>
+                <Input
+                  id="numberOfEmployees"
+                  value={numberOfEmployees}
+                  onChange={(e) => setNumberOfEmployees(e.target.value)}
+                  placeholder="z.B. 15"
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyLocation">Standort</Label>
+                <Input
+                  id="companyLocation"
+                  value={companyLocation}
+                  onChange={(e) => setCompanyLocation(e.target.value)}
+                  placeholder="z.B. Grünwald"
+                />
+              </div>
+              <div>
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://www.beispiel.de"
+                />
+              </div>
+              <div>
                 <Label htmlFor="description">Firmenbeschreibung</Label>
                 <Textarea
                   id="description"
@@ -432,424 +530,405 @@ export default function Onboarding() {
                   rows={4}
                 />
               </div>
-              
-              <div className="space-y-2 border-t pt-4">
+              <div>
                 <Label htmlFor="step2Comments">Zusätzliche Anmerkungen (optional)</Label>
                 <Textarea
                   id="step2Comments"
                   value={step2Comments}
                   onChange={(e) => setStep2Comments(e.target.value)}
                   placeholder="Haben Sie weitere Informationen, die Sie hinzufügen möchten?"
-                  rows={3}
                 />
               </div>
-              
-              <Button 
-                onClick={handleSaveCompanyInfo} 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={upsertCompanyInfoMutation.isPending}
-              >
-                {upsertCompanyInfoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Weiter
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zurück
+                </Button>
+                <Button onClick={handleSaveCompanyInfo} className="flex-1">
+                  Weiter
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
+        {/* Step 3: Business Processes */}
         {currentStep === 3 && !showProcessAnalysis && (
-          <ProcessDiagramCRM onConfirm={handleProcessesConfirmed} />
+          <ProcessDiagramCRM
+            onConfirm={handleProcessesConfirmed}
+            onBack={() => setCurrentStep(2)}
+          />
         )}
 
         {currentStep === 3 && showProcessAnalysis && (
           <ProcessAnalysisCRM
-            processes={selectedProcesses}
-            projectTypes={selectedProjectTypes}
+            selectedProcesses={selectedProcesses}
+            selectedProjectTypes={selectedProjectTypes}
             onComplete={handleProcessAnalysisComplete}
             onBack={handleBackToProcessSelection}
           />
         )}
 
+        {/* Step 4: Goals and Wishes */}
         {currentStep === 4 && (
           <Card>
             <CardHeader>
               <CardTitle>Ziele & Wünsche</CardTitle>
               <CardDescription>
-                Was möchten Sie kurz-, mittel- und langfristig erreichen?
+                Definieren Sie Ihre kurz- und langfristigen Ziele sowie Ihre Vision.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {goals.map((goal, index) => (
-                <Card key={index} className="border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Ziel {index + 1}</CardTitle>
+                <Card key={index} className="p-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <Label>Zieltyp</Label>
+                          <Select
+                            value={goal.goalType}
+                            onValueChange={(value: any) => {
+                              const newGoals = [...goals];
+                              newGoals[index].goalType = value;
+                              setGoals(newGoals);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short_term">Kurzfristig (0-6 Monate)</SelectItem>
+                              <SelectItem value="long_term">Langfristig (6-24 Monate)</SelectItem>
+                              <SelectItem value="vision">Vision (2+ Jahre)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Titel</Label>
+                          <Input
+                            value={goal.title}
+                            onChange={(e) => {
+                              const newGoals = [...goals];
+                              newGoals[index].title = e.target.value;
+                              setGoals(newGoals);
+                            }}
+                            placeholder="z.B. Digitalisierung der Auftragsabwicklung"
+                          />
+                        </div>
+                        <div>
+                          <Label>Beschreibung</Label>
+                          <Textarea
+                            value={goal.description}
+                            onChange={(e) => {
+                              const newGoals = [...goals];
+                              newGoals[index].description = e.target.value;
+                              setGoals(newGoals);
+                            }}
+                            placeholder="Beschreiben Sie das Ziel im Detail..."
+                          />
+                        </div>
+                        <div>
+                          <Label>Priorität</Label>
+                          <Select
+                            value={goal.priority}
+                            onValueChange={(value: any) => {
+                              const newGoals = [...goals];
+                              newGoals[index].priority = value;
+                              setGoals(newGoals);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Niedrig</SelectItem>
+                              <SelectItem value="medium">Mittel</SelectItem>
+                              <SelectItem value="high">Hoch</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleRemoveGoal(index)}
+                        className="ml-2"
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-3 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Typ *</Label>
-                        <Select
-                          value={goal.goalType}
-                          onValueChange={(value: "short_term" | "long_term" | "vision") => {
-                            const newGoals = [...goals];
-                            newGoals[index].goalType = value;
-                            setGoals(newGoals);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="short_term">Kurzfristig (0-6 Monate)</SelectItem>
-                            <SelectItem value="long_term">Langfristig (6-24 Monate)</SelectItem>
-                            <SelectItem value="vision">Vision (2+ Jahre)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Priorität</Label>
-                        <Select
-                          value={goal.priority}
-                          onValueChange={(value: "low" | "medium" | "high") => {
-                            const newGoals = [...goals];
-                            newGoals[index].priority = value;
-                            setGoals(newGoals);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Niedrig</SelectItem>
-                            <SelectItem value="medium">Mittel</SelectItem>
-                            <SelectItem value="high">Hoch</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Titel *</Label>
-                      <Input
-                        value={goal.title}
-                        onChange={(e) => {
-                          const newGoals = [...goals];
-                          newGoals[index].title = e.target.value;
-                          setGoals(newGoals);
-                        }}
-                        placeholder="z.B. Digitalisierung der Auftragserfassung"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Beschreibung</Label>
-                      <Textarea
-                        value={goal.description}
-                        onChange={(e) => {
-                          const newGoals = [...goals];
-                          newGoals[index].description = e.target.value;
-                          setGoals(newGoals);
-                        }}
-                        placeholder="Beschreiben Sie das Ziel im Detail..."
-                        rows={3}
-                      />
-                    </div>
-                  </CardContent>
+                  </div>
                 </Card>
               ))}
               
-              <Button
-                variant="outline"
-                onClick={handleAddGoal}
-                className="w-full"
-              >
+              <Button onClick={handleAddGoal} variant="outline" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 Ziel hinzufügen
               </Button>
               
-              <Button 
-                onClick={handleSaveGoals} 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={createGoalMutation.isPending}
-              >
-                {createGoalMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Weiter
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentStep(3)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zurück
+                </Button>
+                <Button onClick={handleSaveGoals} className="flex-1">
+                  Weiter
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
+        {/* Step 5: Company Values */}
         {currentStep === 5 && (
           <Card>
             <CardHeader>
-              <CardTitle>Unternehmenswerte & Philosophie</CardTitle>
+              <CardTitle>Unternehmenswerte</CardTitle>
               <CardDescription>
-                Was macht Ihre Unternehmenskultur aus? Welche Werte sind Ihnen wichtig?
+                Definieren Sie die Werte, die Ihr Unternehmen prägen.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {values.map((value, index) => (
-                <Card key={index} className="border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Wert {index + 1}</CardTitle>
+                <Card key={index} className="p-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <Label>Wertename</Label>
+                          <Input
+                            value={value.valueName}
+                            onChange={(e) => {
+                              const newValues = [...values];
+                              newValues[index].valueName = e.target.value;
+                              setValues(newValues);
+                            }}
+                            placeholder="z.B. Kundenorientierung"
+                          />
+                        </div>
+                        <div>
+                          <Label>Beschreibung</Label>
+                          <Textarea
+                            value={value.description}
+                            onChange={(e) => {
+                              const newValues = [...values];
+                              newValues[index].description = e.target.value;
+                              setValues(newValues);
+                            }}
+                            placeholder="Was bedeutet dieser Wert für Ihr Unternehmen?"
+                          />
+                        </div>
+                        <div>
+                          <Label>Beispiele</Label>
+                          <Textarea
+                            value={value.examples}
+                            onChange={(e) => {
+                              const newValues = [...values];
+                              newValues[index].examples = e.target.value;
+                              setValues(newValues);
+                            }}
+                            placeholder="Konkrete Beispiele, wie dieser Wert gelebt wird..."
+                          />
+                        </div>
+                        <div>
+                          <Label>Wichtigkeit (1-10)</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={value.importance}
+                            onChange={(e) => {
+                              const newValues = [...values];
+                              newValues[index].importance = parseInt(e.target.value) || 5;
+                              setValues(newValues);
+                            }}
+                          />
+                        </div>
+                      </div>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleRemoveValue(index)}
+                        className="ml-2"
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      <Label>Wertname *</Label>
-                      <Input
-                        value={value.valueName}
-                        onChange={(e) => {
-                          const newValues = [...values];
-                          newValues[index].valueName = e.target.value;
-                          setValues(newValues);
-                        }}
-                        placeholder="z.B. Kundenzufriedenheit, Qualität, Innovation"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Beschreibung</Label>
-                      <Textarea
-                        value={value.description}
-                        onChange={(e) => {
-                          const newValues = [...values];
-                          newValues[index].description = e.target.value;
-                          setValues(newValues);
-                        }}
-                        placeholder="Was bedeutet dieser Wert für Ihr Unternehmen?"
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Beispiele</Label>
-                      <Textarea
-                        value={value.examples}
-                        onChange={(e) => {
-                          const newValues = [...values];
-                          newValues[index].examples = e.target.value;
-                          setValues(newValues);
-                        }}
-                        placeholder="Konkrete Beispiele, wie dieser Wert gelebt wird..."
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Wichtigkeit (1-10)</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={value.importance}
-                        onChange={(e) => {
-                          const newValues = [...values];
-                          newValues[index].importance = parseInt(e.target.value) || 5;
-                          setValues(newValues);
-                        }}
-                      />
-                    </div>
-                  </CardContent>
+                  </div>
                 </Card>
               ))}
               
-              <Button
-                variant="outline"
-                onClick={handleAddValue}
-                className="w-full"
-              >
+              <Button onClick={handleAddValue} variant="outline" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 Wert hinzufügen
               </Button>
               
-              <Button 
-                onClick={async () => {
-                  if (values.length === 0) {
-                    toast.error("Bitte fügen Sie mindestens einen Wert hinzu");
-                    return;
-                  }
-                  const hasEmptyNames = values.some(v => !v.valueName.trim());
-                  if (hasEmptyNames) {
-                    toast.error("Bitte geben Sie für alle Werte einen Namen ein");
-                    return;
-                  }
-                  
-                  try {
-                    for (const value of values) {
-                      await createValueMutation.mutateAsync({
-                        sessionId,
-                        ...value,
-                      });
-                    }
-                    
-                    await updateSessionMutation.mutateAsync({ sessionId, currentStep: 6 });
-                    setCurrentStep(6);
-                    toast.success("Werte gespeichert");
-                  } catch (error) {
-                    toast.error("Fehler beim Speichern");
-                  }
-                }} 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={createValueMutation.isPending}
-              >
-                {createValueMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Weiter
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentStep(4)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zurück
+                </Button>
+                <Button onClick={handleSaveValues} className="flex-1">
+                  Weiter
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
+        {/* Step 6: Odoo Module Recommendations */}
         {currentStep === 6 && (
+          <OdooModuleRecommendation
+            selectedProcesses={selectedProcesses}
+            selectedProjectTypes={selectedProjectTypes}
+            goals={goals}
+            onNext={() => {
+              setCurrentStep(7);
+              saveToLocalStorage();
+            }}
+            onBack={() => setCurrentStep(5)}
+          />
+        )}
+
+        {/* Step 7: Workflow Automation */}
+        {currentStep === 7 && (
+          <WorkflowAutomation
+            selectedProcesses={selectedProcesses}
+            onSave={(automationData) => {
+              setAutomations(automationData);
+              setCurrentStep(8);
+              saveToLocalStorage();
+            }}
+            onBack={() => setCurrentStep(6)}
+          />
+        )}
+
+        {/* Step 8: Roles & Permissions */}
+        {currentStep === 8 && (
+          <RolesPermissions
+            onSave={(rolesData) => {
+              setRoles(rolesData);
+              setCurrentStep(9);
+              saveToLocalStorage();
+            }}
+            onBack={() => setCurrentStep(7)}
+          />
+        )}
+
+        {/* Step 9: Integrations */}
+        {currentStep === 9 && (
+          <Integrations
+            onSave={(integrationsData) => {
+              setIntegrations(integrationsData);
+              setCurrentStep(10);
+              saveToLocalStorage();
+            }}
+            onBack={() => setCurrentStep(8)}
+          />
+        )}
+
+        {/* Step 10: Go-Live Planning */}
+        {currentStep === 10 && (
+          <GoLivePlanning
+            onSave={(planData) => {
+              setGoLivePlan(planData);
+              setCurrentStep(11);
+              saveToLocalStorage();
+            }}
+            onBack={() => setCurrentStep(9)}
+          />
+        )}
+
+        {/* Step 11: Final Review & Submit */}
+        {currentStep === 11 && (
           <Card>
             <CardHeader>
-              <CardTitle>Dokumente hochladen</CardTitle>
+              <CardTitle>Zusammenfassung & Abschluss</CardTitle>
               <CardDescription>
-                Laden Sie wichtige Dokumente hoch (Logo, Vorlagen, Preislisten etc.)
+                Überprüfen Sie Ihre Angaben und schließen Sie das Onboarding ab.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <DocumentUpload sessionId={sessionId} />
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold">Kontaktdaten</h3>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Name:</strong> {clientName}<br />
+                  <strong>E-Mail:</strong> {clientEmail || "Nicht angegeben"}
+                </p>
+              </div>
               
-              <Button 
-                onClick={() => setCurrentStep(7)} 
-                className="w-full bg-accent hover:bg-accent/90"
-              >
-                Weiter zu Modul-Empfehlungen
-              </Button>
+              <div className="space-y-2">
+                <h3 className="font-semibold">Firmeninformationen</h3>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Firma:</strong> {companyName}<br />
+                  <strong>Branche:</strong> {industry || "Nicht angegeben"}<br />
+                  <strong>Mitarbeiter:</strong> {numberOfEmployees || "Nicht angegeben"}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold">Geschäftsprozesse</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedProcesses.length} Prozesse ausgewählt
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold">Ziele</h3>
+                <p className="text-sm text-muted-foreground">
+                  {goals.length} Ziele definiert
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold">Unternehmenswerte</h3>
+                <p className="text-sm text-muted-foreground">
+                  {values.length} Werte definiert
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="additionalNotes">Abschließende Anmerkungen (optional)</Label>
+                <Textarea
+                  id="additionalNotes"
+                  value={additionalNotes}
+                  onChange={(e) => setAdditionalNotes(e.target.value)}
+                  placeholder="Gibt es noch etwas, das Sie uns mitteilen möchten?"
+                  rows={4}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentStep(10)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zurück
+                </Button>
+                <Button 
+                  onClick={handleComplete} 
+                  className="flex-1"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gesendet...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Onboarding abschließen
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
-
-        {/* Step 7: Odoo Module Recommendations */}
-        {currentStep === 7 && (
-          <div className="space-y-6">
-            <OdooModuleRecommendation 
-              selectedCRMStages={selectedProcesses.map(p => p.id)}
-              selectedProjectTypes={selectedProjectTypes}
-            />
-            <Button 
-              onClick={() => setCurrentStep(8)} 
-              className="w-full bg-accent hover:bg-accent/90"
-            >
-              Weiter zu Workflow-Automatisierung
-            </Button>
-          </div>
-        )}
-
-        {/* Step 8: Workflow Automation */}
-        {currentStep === 8 && (
-          <div className="space-y-6">
-            <WorkflowAutomation onAutomationsChange={setAutomations} />
-            <Button 
-              onClick={() => setCurrentStep(9)} 
-              className="w-full bg-accent hover:bg-accent/90"
-            >
-              Weiter zu Rollen & Berechtigungen
-            </Button>
-          </div>
-        )}
-
-        {/* Step 9: Roles & Permissions */}
-        {currentStep === 9 && (
-          <div className="space-y-6">
-            <RolesPermissions onRolesChange={setRoles} />
-            <Button 
-              onClick={() => setCurrentStep(10)} 
-              className="w-full bg-accent hover:bg-accent/90"
-            >
-              Weiter zu Integrationen
-            </Button>
-          </div>
-        )}
-
-        {/* Step 10: Integrations */}
-        {currentStep === 10 && (
-          <div className="space-y-6">
-            <Integrations onIntegrationsChange={setIntegrations} />
-            <div className="flex gap-4">
-              <Button 
-                variant="outline"
-                onClick={() => setCurrentStep(9)}
-                className="flex-1"
-              >
-                Zurück
-              </Button>
-              <Button 
-                onClick={() => setCurrentStep(11)} 
-                className="flex-1 bg-accent hover:bg-accent/90"
-              >
-                Weiter zu Go-Live Planung
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 11: Go-Live Planning */}
-        {currentStep === 11 && (
-          <div className="space-y-6">
-            <GoLivePlanning onPlanChange={setGoLivePlan} />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Zusätzliche Wünsche & Ideen</CardTitle>
-                <CardDescription>
-                  Gibt es noch weitere Punkte, Wünsche oder Ideen, die Sie mit uns besprechen möchten?
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Schreiben Sie hier alle zusätzlichen Wünsche, Ideen oder Anmerkungen auf..."
-                  value={additionalNotes}
-                  onChange={(e) => setAdditionalNotes(e.target.value)}
-                  className="min-h-32"
-                />
-              </CardContent>
-            </Card>
-            
-            <div className="flex gap-4">
-              <Button 
-                variant="outline"
-                onClick={() => setCurrentStep(10)}
-                className="flex-1"
-              >
-                Zurück
-              </Button>
-              <Button 
-                onClick={handleComplete} 
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                disabled={createValueMutation.isPending}
-              >
-                {createValueMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                Onboarding abschließen
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {sessionId && <AIChatbot sessionId={sessionId} />}
       </div>
+      
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 }
