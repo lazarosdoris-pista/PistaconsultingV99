@@ -780,12 +780,12 @@ export default function Onboarding() {
         {/* Step 6: Odoo Module Recommendations */}
         {currentStep === 6 && (
           <OdooModuleRecommendation
-            selectedProcesses={selectedProcesses}
-            selectedProjectTypes={selectedProjectTypes}
-            goals={goals}
-            onNext={() => {
+            selectedCRMStages={(selectedProcesses || []).map(p => p.id)}
+            selectedProjectTypes={selectedProjectTypes || []}
+            onComplete={() => {
               setCurrentStep(7);
               saveToLocalStorage();
+              toast.success("Modul-Empfehlungen gespeichert");
             }}
             onBack={() => setCurrentStep(5)}
           />

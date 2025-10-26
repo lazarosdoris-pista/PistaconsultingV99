@@ -65,3 +65,29 @@
 - [x] User should be required to describe ALL selected CRM phases before proceeding
 - [x] Fixed: Props name mismatch - Onboarding.tsx was passing selectedProcesses/selectedProjectTypes but ProcessAnalysisCRM expected processes/projectTypes
 
+
+
+## Comprehensive Onboarding Testing
+- [ ] Test Step 1: Contact Information
+- [ ] Test Step 2: Company Information
+- [ ] Test Step 3: CRM Phases Selection
+- [ ] Test Step 4: Process Analysis (all selected phases)
+- [ ] Test Step 5: Goals & Objectives
+- [ ] Test Step 6: Company Values (STUCK - user cannot proceed)
+- [ ] Test Step 7: Odoo Module Recommendations
+- [ ] Test Step 8: Workflow Automation
+- [ ] Test Step 9: Roles & Permissions
+- [ ] Test Step 10: Integrations
+- [ ] Test Step 11: Go-Live Planning
+- [ ] Test Step 12: Final Summary & Submit
+- [ ] Fix any bugs found during testing
+
+
+
+## CRITICAL BUG - Step 6 Missing Navigation Buttons
+- [x] Step 6 (Odoo Module Recommendations) has NO "Weiter" button at the bottom
+- [x] User cannot proceed to Step 7 - STUCK at Step 6
+- [x] Added "Zurück" and "Weiter" buttons to OdooModuleRecommendation component
+- [x] Fixed props mismatch - now uses onComplete/onBack instead of onNext/onBack
+- [x] This is blocking the entire onboarding flow - NOW FIXED!
+

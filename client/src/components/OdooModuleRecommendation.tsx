@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Package, Users, Calendar, FileText, DollarSign, Truck, Settings, Mail, BarChart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Package, Users, Calendar, FileText, DollarSign, Truck, Settings, Mail, BarChart, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface OdooModule {
   id: string;
@@ -16,6 +17,8 @@ interface OdooModule {
 interface OdooModuleRecommendationProps {
   selectedCRMStages: string[];
   selectedProjectTypes: string[];
+  onComplete: () => void;
+  onBack: () => void;
 }
 
 const ODOO_MODULES: OdooModule[] = [
@@ -157,8 +160,10 @@ const ODOO_MODULES: OdooModule[] = [
 ];
 
 export default function OdooModuleRecommendation({ 
-  selectedCRMStages, 
-  selectedProjectTypes 
+  selectedCRMStages,
+  selectedProjectTypes,
+  onComplete,
+  onBack
 }: OdooModuleRecommendationProps) {
   
   const getRecommendedModules = () => {
@@ -295,6 +300,25 @@ export default function OdooModuleRecommendation({
           </div>
         </CardContent>
       </Card>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button
+          onClick={onBack}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+        <Button
+          onClick={onComplete}
+          className="bg-accent hover:bg-accent/90 flex items-center gap-2"
+        >
+          Weiter
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
