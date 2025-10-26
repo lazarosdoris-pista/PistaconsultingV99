@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Plus, Trash2, Users } from "lucide-react";
+import { Shield, Plus, Trash2, Users, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Role {
   id: string;
@@ -25,6 +25,8 @@ interface Role {
 
 interface RolesPermissionsProps {
   onRolesChange: (roles: Role[]) => void;
+  onComplete: () => void;
+  onBack: () => void;
 }
 
 const DEFAULT_ROLES: Role[] = [
@@ -86,7 +88,11 @@ const PERMISSION_LABELS = {
   admin: "Administrator-Rechte"
 };
 
-export default function RolesPermissions({ onRolesChange }: RolesPermissionsProps) {
+export default function RolesPermissions({ 
+  onRolesChange,
+  onComplete,
+  onBack 
+}: RolesPermissionsProps) {
   const [roles, setRoles] = useState<Role[]>(DEFAULT_ROLES);
 
   const addRole = () => {
@@ -239,6 +245,25 @@ export default function RolesPermissions({ onRolesChange }: RolesPermissionsProp
           </div>
         </CardContent>
       </Card>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button
+          onClick={onBack}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+        <Button
+          onClick={onComplete}
+          className="bg-accent hover:bg-accent/90 flex items-center gap-2"
+        >
+          Weiter
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

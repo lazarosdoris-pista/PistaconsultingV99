@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Rocket, Calendar, Users, Database, GraduationCap, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Rocket, Calendar, Users, Database, GraduationCap, AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface GoLivePlan {
   timeline: "asap" | "1month" | "3months" | "flexible";
@@ -22,9 +23,15 @@ interface GoLivePlan {
 
 interface GoLivePlanningProps {
   onPlanChange: (plan: GoLivePlan) => void;
+  onComplete: () => void;
+  onBack: () => void;
 }
 
-export default function GoLivePlanning({ onPlanChange }: GoLivePlanningProps) {
+export default function GoLivePlanning({ 
+  onPlanChange,
+  onComplete,
+  onBack 
+}: GoLivePlanningProps) {
   const [plan, setPlan] = useState<GoLivePlan>({
     timeline: "flexible",
     dataImport: "yes",
@@ -289,6 +296,25 @@ export default function GoLivePlanning({ onPlanChange }: GoLivePlanningProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button
+          onClick={onBack}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+        <Button
+          onClick={onComplete}
+          className="bg-accent hover:bg-accent/90 flex items-center gap-2"
+        >
+          Weiter
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

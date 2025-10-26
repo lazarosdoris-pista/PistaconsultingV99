@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plug, Mail, Globe, FileText, CreditCard, Cloud, Database, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plug, Mail, Globe, FileText, CreditCard, Cloud, Database, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Integration {
   id: string;
@@ -23,6 +24,8 @@ interface Integration {
 
 interface IntegrationsProps {
   onIntegrationsChange: (integrations: Integration[]) => void;
+  onComplete: () => void;
+  onBack: () => void;
 }
 
 const AVAILABLE_INTEGRATIONS: Integration[] = [
@@ -91,7 +94,11 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   }
 ];
 
-export default function Integrations({ onIntegrationsChange }: IntegrationsProps) {
+export default function Integrations({ 
+  onIntegrationsChange,
+  onComplete,
+  onBack 
+}: IntegrationsProps) {
   const [integrations, setIntegrations] = useState<Integration[]>(AVAILABLE_INTEGRATIONS);
 
   const toggleIntegration = (id: string) => {
@@ -255,6 +262,25 @@ export default function Integrations({ onIntegrationsChange }: IntegrationsProps
           </div>
         </CardContent>
       </Card>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button
+          onClick={onBack}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+        <Button
+          onClick={onComplete}
+          className="bg-accent hover:bg-accent/90 flex items-center gap-2"
+        >
+          Weiter
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -5,7 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Mail, Bell, Calendar, FileText, Users, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Zap, Mail, Bell, Calendar, FileText, Users, Package, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Automation {
   id: string;
@@ -21,6 +22,8 @@ interface Automation {
 
 interface WorkflowAutomationProps {
   onAutomationsChange: (automations: Automation[]) => void;
+  onComplete: () => void;
+  onBack: () => void;
 }
 
 const AUTOMATION_TEMPLATES: Automation[] = [
@@ -134,7 +137,11 @@ const AUTOMATION_TEMPLATES: Automation[] = [
   }
 ];
 
-export default function WorkflowAutomation({ onAutomationsChange }: WorkflowAutomationProps) {
+export default function WorkflowAutomation({ 
+  onAutomationsChange,
+  onComplete,
+  onBack 
+}: WorkflowAutomationProps) {
   const [automations, setAutomations] = useState<Automation[]>(AUTOMATION_TEMPLATES);
 
   const toggleAutomation = (id: string) => {
@@ -284,6 +291,25 @@ export default function WorkflowAutomation({ onAutomationsChange }: WorkflowAuto
           })}
         </CardContent>
       </Card>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button
+          onClick={onBack}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+        <Button
+          onClick={onComplete}
+          className="bg-accent hover:bg-accent/90 flex items-center gap-2"
+        >
+          Weiter
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

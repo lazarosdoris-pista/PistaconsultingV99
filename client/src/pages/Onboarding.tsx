@@ -794,11 +794,13 @@ export default function Onboarding() {
         {/* Step 7: Workflow Automation */}
         {currentStep === 7 && (
           <WorkflowAutomation
-            selectedProcesses={selectedProcesses}
-            onSave={(automationData) => {
+            onAutomationsChange={(automationData) => {
               setAutomations(automationData);
+            }}
+            onComplete={() => {
               setCurrentStep(8);
               saveToLocalStorage();
+              toast.success("Workflow-Automatisierungen gespeichert");
             }}
             onBack={() => setCurrentStep(6)}
           />
@@ -807,10 +809,13 @@ export default function Onboarding() {
         {/* Step 8: Roles & Permissions */}
         {currentStep === 8 && (
           <RolesPermissions
-            onSave={(rolesData) => {
+            onRolesChange={(rolesData) => {
               setRoles(rolesData);
+            }}
+            onComplete={() => {
               setCurrentStep(9);
               saveToLocalStorage();
+              toast.success("Rollen & Berechtigungen gespeichert");
             }}
             onBack={() => setCurrentStep(7)}
           />
@@ -819,10 +824,13 @@ export default function Onboarding() {
         {/* Step 9: Integrations */}
         {currentStep === 9 && (
           <Integrations
-            onSave={(integrationsData) => {
+            onIntegrationsChange={(integrationsData) => {
               setIntegrations(integrationsData);
+            }}
+            onComplete={() => {
               setCurrentStep(10);
               saveToLocalStorage();
+              toast.success("Integrationen gespeichert");
             }}
             onBack={() => setCurrentStep(8)}
           />
@@ -831,10 +839,13 @@ export default function Onboarding() {
         {/* Step 10: Go-Live Planning */}
         {currentStep === 10 && (
           <GoLivePlanning
-            onSave={(planData) => {
+            onPlanChange={(planData) => {
               setGoLivePlan(planData);
+            }}
+            onComplete={() => {
               setCurrentStep(11);
               saveToLocalStorage();
+              toast.success("Go-Live Planung gespeichert");
             }}
             onBack={() => setCurrentStep(9)}
           />
