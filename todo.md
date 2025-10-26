@@ -58,3 +58,10 @@
 - [ ] Test EVERY single step end-to-end to ensure no crashes (requires deployment)
 - [x] Make sure Steps 3 and 4 work perfectly
 
+
+
+## New Bug - Auto-Skip Steps
+- [x] Fix: In Step 4 (Process Analysis), user selects multiple CRM phases (e.g., 3 phases) but only describes ONE phase, then app auto-advances to next step
+- [x] User should be required to describe ALL selected CRM phases before proceeding
+- [x] Fixed: Props name mismatch - Onboarding.tsx was passing selectedProcesses/selectedProjectTypes but ProcessAnalysisCRM expected processes/projectTypes
+

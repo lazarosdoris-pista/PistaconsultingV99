@@ -25,8 +25,8 @@ interface ProcessAnalysisData {
 }
 
 interface ProcessAnalysisCRMProps {
-  processes: ProcessStep[];
-  projectTypes: string[];
+  selectedProcesses: ProcessStep[];
+  selectedProjectTypes: string[];
   onComplete: (analyses: ProcessAnalysisData[], projectTypeData: any[]) => void;
   onBack: () => void;
 }
@@ -55,11 +55,14 @@ const PROJECT_TYPE_QUESTIONS = {
 };
 
 export default function ProcessAnalysisCRM({ 
-  processes, 
-  projectTypes,
+  selectedProcesses, 
+  selectedProjectTypes,
   onComplete, 
   onBack 
 }: ProcessAnalysisCRMProps) {
+  // Rename props internally for easier usage
+  const processes = selectedProcesses;
+  const projectTypes = selectedProjectTypes;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [analyses, setAnalyses] = useState<ProcessAnalysisData[]>(
     (processes || []).map(p => ({
