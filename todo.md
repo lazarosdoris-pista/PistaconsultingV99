@@ -8,7 +8,11 @@
 - [x] At the end of onboarding, send all data via FormSubmit to fl@leibinger-am.de
 - [ ] Test the complete flow without database
 - [ ] Update environment variables (remove DATABASE_URL, OAUTH_SERVER_URL, JWT_SECRET)
-- [ ] Build and push to GitHub
+- [x] Build and push to GitHub
+- [ ] Convert to pure static website (remove Node.js server)
+- [ ] Update build configuration for static deployment on IONOS Deploy Now
+- [ ] Test static build locally
+- [ ] Push static version to GitHub
 
 ## Completed Features
 - [x] Basic onboarding flow with multiple steps
