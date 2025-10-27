@@ -110,3 +110,12 @@
 - [x] Attach PDF to FormSubmit email
 - [x] Make PDF readable and professional
 
+
+
+## BUG - PDF not received via email
+- [x] FormSubmit does NOT support file attachments (confirmed from docs)
+- [x] Solution: Add PDF download button on Step 11
+- [x] Implement PDF download button
+- [x] User can download PDF before submitting
+- [x] Remove PDF attachment from FormSubmit (not supported)
+

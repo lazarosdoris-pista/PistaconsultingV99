@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Check, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Trash2, Check, ArrowLeft, Download } from "lucide-react";
 import { generateOnboardingPDF } from "@/utils/generateOnboardingPDF";
 import ProcessDiagramCRM from "@/components/ProcessDiagramCRM";
 import ProcessAnalysisCRM from "@/components/ProcessAnalysisCRM";
@@ -323,9 +323,7 @@ export default function Onboarding() {
     toast.success("Unternehmenswerte gespeichert");
   };
 
-  const handleComplete = async () => {
-    setIsSubmitting(true);
-    
+  const handleDownloadPDF = () => {
     try {
       // Generate PDF
       const pdfBlob = generateOnboardingPDF({
@@ -351,11 +349,29 @@ export default function Onboarding() {
         additionalNotes
       });
       
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Onboarding_${companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success("PDF erfolgreich heruntergeladen!");
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error("Fehler beim Erstellen der PDF");
+    }
+  };
+
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    
+    try {
       // Prepare all data for email submission
       const formData = new FormData();
-      
-      // Add PDF attachment
-      formData.append("attachment", pdfBlob, `Onboarding_${companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       // Add all onboarding data to form
       formData.append("_subject", `Neues Onboarding: ${companyName}`);
@@ -938,16 +954,26 @@ export default function Onboarding() {
                 />
               </div>
               
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setCurrentStep(10)}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Zurück
-                </Button>
+              <div className="flex flex-col gap-3">
                 <Button 
-                  onClick={handleComplete} 
-                  className="flex-1"
-                  disabled={isSubmitting}
+                  onClick={handleDownloadPDF}
+                  variant="outline"
+                  className="w-full"
                 >
+                  <Download className="mr-2 h-4 w-4" />
+                  PDF herunterladen
+                </Button>
+                
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setCurrentStep(10)}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Zurück
+                  </Button>
+                  <Button 
+                    onClick={handleComplete} 
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -960,6 +986,7 @@ export default function Onboarding() {
                     </>
                   )}
                 </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
