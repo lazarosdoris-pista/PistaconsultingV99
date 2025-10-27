@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Check, ArrowLeft } from "lucide-react";
+import { generateOnboardingPDF } from "@/utils/generateOnboardingPDF";
 import ProcessDiagramCRM from "@/components/ProcessDiagramCRM";
 import ProcessAnalysisCRM from "@/components/ProcessAnalysisCRM";
 import OdooModuleRecommendation from "@/components/OdooModuleRecommendation";
@@ -326,8 +327,35 @@ export default function Onboarding() {
     setIsSubmitting(true);
     
     try {
+      // Generate PDF
+      const pdfBlob = generateOnboardingPDF({
+        clientName,
+        email: clientEmail,
+        companyName,
+        industry,
+        employees: numberOfEmployees,
+        revenue: '',
+        location: companyLocation,
+        website,
+        phone: '',
+        selectedProcesses,
+        selectedProjectTypes,
+        processAnalyses,
+        projectTypeData,
+        goals,
+        values,
+        automations,
+        roles,
+        integrations,
+        goLivePlan,
+        additionalNotes
+      });
+      
       // Prepare all data for email submission
       const formData = new FormData();
+      
+      // Add PDF attachment
+      formData.append("attachment", pdfBlob, `Onboarding_${companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       // Add all onboarding data to form
       formData.append("_subject", `Neues Onboarding: ${companyName}`);
